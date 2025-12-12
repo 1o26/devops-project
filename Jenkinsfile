@@ -274,103 +274,111 @@ pipeline {
      */
     post {
         always {
-            script {
-                echo "========== Pipeline Cleanup =========="
-                
-                // Clean up Docker images
-                sh '''
-                    echo "Cleaning up Docker resources..."
-                    docker system prune -f --volumes || true
-                '''
+            node {
+                script {
+                    echo "========== Pipeline Cleanup =========="
+                    
+                    // Clean up Docker images
+                    sh '''
+                        echo "Cleaning up Docker resources..."
+                        docker system prune -f --volumes || true
+                    '''
+                }
             }
         }
         
         success {
-            script {
-                echo "========== Pipeline Success =========="
-                def buildDuration = "${BUILD_DURATION}"
-                def deploymentUrl = "http://your-k8s-cluster/devops-app"
-                
-                // Slack success notification
-                sh '''
-                    curl -X POST ${SLACK_WEBHOOK_URL} \
-                        -H 'Content-Type: application/json' \
-                        -d '{
-                            "channel": "#devops",
-                            "username": "Jenkins Bot",
-                            "icon_emoji": ":jenkins:",
-                            "attachments": [{
-                                "color": "good",
-                                "title": "✅ DevOps Pipeline Success",
-                                "text": "Build and deployment completed successfully",
-                                "fields": [
-                                    {"title": "Build Number", "value": "'${BUILD_NUMBER}'", "short": true},
-                                    {"title": "Image Tag", "value": "'${IMAGE}:${TAG}'", "short": true},
-                                    {"title": "Environment", "value": "production", "short": true},
-                                    {"title": "Branch", "value": "'${GIT_BRANCH}'", "short": true},
-                                    {"title": "Namespace", "value": "'${KUBE_NAMESPACE}'", "short": true},
-                                    {"title": "Commit", "value": "'${GIT_COMMIT_SHORT}'", "short": true}
-                                ],
-                                "timestamp": '$(date +%s)'
-                            }]
-                        }' || true
-                '''
+            node {
+                script {
+                    echo "========== Pipeline Success =========="
+                    def buildDuration = "${BUILD_DURATION}"
+                    def deploymentUrl = "http://your-k8s-cluster/devops-app"
+                    
+                    // Slack success notification
+                    sh '''
+                        curl -X POST ${SLACK_WEBHOOK_URL} \
+                            -H 'Content-Type: application/json' \
+                            -d '{
+                                "channel": "#devops",
+                                "username": "Jenkins Bot",
+                                "icon_emoji": ":jenkins:",
+                                "attachments": [{
+                                    "color": "good",
+                                    "title": "✅ DevOps Pipeline Success",
+                                    "text": "Build and deployment completed successfully",
+                                    "fields": [
+                                        {"title": "Build Number", "value": "'${BUILD_NUMBER}'", "short": true},
+                                        {"title": "Image Tag", "value": "'${IMAGE}:${TAG}'", "short": true},
+                                        {"title": "Environment", "value": "production", "short": true},
+                                        {"title": "Branch", "value": "'${GIT_BRANCH}'", "short": true},
+                                        {"title": "Namespace", "value": "'${KUBE_NAMESPACE}'", "short": true},
+                                        {"title": "Commit", "value": "'${GIT_COMMIT_SHORT}'", "short": true}
+                                    ],
+                                    "timestamp": '$(date +%s)'
+                                }]
+                            }' || true
+                    '''
+                }
             }
         }
         
         failure {
-            script {
-                echo "========== Pipeline Failure =========="
-                
-                // Slack failure notification
-                sh '''
-                    curl -X POST ${SLACK_WEBHOOK_URL} \
-                        -H 'Content-Type: application/json' \
-                        -d '{
-                            "channel": "#devops",
-                            "username": "Jenkins Bot",
-                            "icon_emoji": ":jenkins:",
-                            "attachments": [{
-                                "color": "danger",
-                                "title": "❌ DevOps Pipeline Failed",
-                                "text": "Build or deployment failed. Check Jenkins logs for details.",
-                                "fields": [
-                                    {"title": "Build Number", "value": "'${BUILD_NUMBER}'", "short": true},
-                                    {"title": "Status", "value": "FAILED", "short": true},
-                                    {"title": "Branch", "value": "'${GIT_BRANCH}'", "short": true},
-                                    {"title": "Commit", "value": "'${GIT_COMMIT_SHORT}'", "short": true}
-                                ],
-                                "timestamp": '$(date +%s)'
-                            }]
-                        }' || true
-                '''
+            node {
+                script {
+                    echo "========== Pipeline Failure =========="
+                    
+                    // Slack failure notification
+                    sh '''
+                        curl -X POST ${SLACK_WEBHOOK_URL} \
+                            -H 'Content-Type: application/json' \
+                            -d '{
+                                "channel": "#devops",
+                                "username": "Jenkins Bot",
+                                "icon_emoji": ":jenkins:",
+                                "attachments": [{
+                                    "color": "danger",
+                                    "title": "❌ DevOps Pipeline Failed",
+                                    "text": "Build or deployment failed. Check Jenkins logs for details.",
+                                    "fields": [
+                                        {"title": "Build Number", "value": "'${BUILD_NUMBER}'", "short": true},
+                                        {"title": "Status", "value": "FAILED", "short": true},
+                                        {"title": "Branch", "value": "'${GIT_BRANCH}'", "short": true},
+                                        {"title": "Commit", "value": "'${GIT_COMMIT_SHORT}'", "short": true}
+                                    ],
+                                    "timestamp": '$(date +%s)'
+                                }]
+                            }' || true
+                    '''
+                }
             }
         }
         
         unstable {
-            script {
-                echo "========== Pipeline Unstable =========="
-                
-                // Slack warning notification
-                sh '''
-                    curl -X POST ${SLACK_WEBHOOK_URL} \
-                        -H 'Content-Type: application/json' \
-                        -d '{
-                            "channel": "#devops",
-                            "username": "Jenkins Bot",
-                            "icon_emoji": ":jenkins:",
-                            "attachments": [{
-                                "color": "warning",
-                                "title": "⚠️ DevOps Pipeline Unstable",
-                                "text": "Pipeline completed with warnings. Review test results.",
-                                "fields": [
-                                    {"title": "Build Number", "value": "'${BUILD_NUMBER}'", "short": true},
-                                    {"title": "Status", "value": "UNSTABLE", "short": true}
-                                ],
-                                "timestamp": '$(date +%s)'
-                            }]
-                        }' || true
-                '''
+            node {
+                script {
+                    echo "========== Pipeline Unstable =========="
+                    
+                    // Slack warning notification
+                    sh '''
+                        curl -X POST ${SLACK_WEBHOOK_URL} \
+                            -H 'Content-Type: application/json' \
+                            -d '{
+                                "channel": "#devops",
+                                "username": "Jenkins Bot",
+                                "icon_emoji": ":jenkins:",
+                                "attachments": [{
+                                    "color": "warning",
+                                    "title": "⚠️ DevOps Pipeline Unstable",
+                                    "text": "Pipeline completed with warnings. Review test results.",
+                                    "fields": [
+                                        {"title": "Build Number", "value": "'${BUILD_NUMBER}'", "short": true},
+                                        {"title": "Status", "value": "UNSTABLE", "short": true}
+                                    ],
+                                    "timestamp": '$(date +%s)'
+                                }]
+                            }' || true
+                    '''
+                }
             }
         }
     }
