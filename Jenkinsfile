@@ -30,7 +30,7 @@ pipeline {
     // Environment variables
     environment {
         // Docker configuration
-        IMAGE = "mydockerhubuser/my-devops-app"
+        IMAGE = "tusharmv266/my-devops-app"
         TAG = "${BUILD_NUMBER}"
         REGISTRY_URL = "${params.DOCKER_REGISTRY_URL}"
         DOCKER_CREDENTIALS = credentials('DOCKERHUB_CREDS')
