@@ -1,0 +1,46 @@
+---
+# Kubernetes Ingress Manifest (Optional)
+# Provides external access to the DevOps application
+# Requires ingress controller to be installed in the cluster
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: devops-app-ingress
+  namespace: default
+  labels:
+    app: devops-app
+    version: "1.0"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+spec:
+  # Ingress class name
+  ingressClassName: nginx
+  
+  # TLS configuration (optional - uncomment if using HTTPS)
+  # tls:
+  # - hosts:
+  #   - devops-app.example.com
+  #   secretName: devops-app-tls-cert
+  
+  # Routing rules
+  rules:
+  - host: devops-app.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: devops-app-service
+            port:
+              number: 80
+  
+  # Default backend (fallback)
+  defaultBackend:
+    service:
+      name: devops-app-service
+      port:
+        number: 80

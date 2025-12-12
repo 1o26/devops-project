@@ -1,0 +1,35 @@
+---
+# Kubernetes Service Manifest
+# Exposes the DevOps application using ClusterIP service type
+apiVersion: v1
+kind: Service
+metadata:
+  name: devops-app-service
+  namespace: default
+  labels:
+    app: devops-app
+    version: "1.0"
+  annotations:
+    description: "Service for DevOps CI/CD application"
+spec:
+  # Service type - ClusterIP for internal communication
+  type: ClusterIP
+  
+  # Service selector to match pods
+  selector:
+    app: devops-app
+  
+  # Session affinity
+  sessionAffinity: None
+  
+  # Port configuration
+  ports:
+  - name: http
+    port: 80
+    targetPort: 5000
+    protocol: TCP
+  
+  # IP family policy
+  ipFamilyPolicy: SingleStack
+  ipFamilies:
+  - IPv4

@@ -1,0 +1,32 @@
+"""
+Configuration for flake8 code linter
+Defines code style rules and exclusions
+"""
+
+[flake8]
+# Maximum line length
+max-line-length = 120
+
+# Exclude directories
+exclude = 
+    .git,
+    __pycache__,
+    .pytest_cache,
+    .venv,
+    venv,
+    build,
+    dist,
+    .eggs,
+    *.egg-info
+
+# Ignore specific rules
+ignore = 
+    E203,  # Whitespace before ':'
+    W503,  # Line break before binary operator
+    W504   # Line break after binary operator
+
+# Count errors
+count = True
+
+# Show errors with statistics
+statistics = True
