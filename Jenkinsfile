@@ -37,7 +37,6 @@ pipeline {
         
         // Kubernetes configuration
         KUBE_NAMESPACE = "${params.KUBE_NAMESPACE}"
-        KUBECONFIG_CREDENTIALS = credentials('KUBE_CONFIG')
         
         // Application settings
         ENVIRONMENT = "production"
@@ -223,45 +222,54 @@ pipeline {
          * KUBERNETES DEPLOY STAGE
          * Deploys application to Kubernetes cluster
          * Uses kubectl to apply manifests and update deployment
+         * Will skip if KUBE_CONFIG credential is not configured
          */
         stage('Kubernetes Deploy') {
             steps {
                 script {
                     echo "========== Kubernetes Deploy Stage =========="
                     echo "Deploying to Kubernetes namespace: ${KUBE_NAMESPACE}"
-                }
-                
-                // Deploy to Kubernetes
-                sh '''
-                    echo "Setting up kubeconfig..."
-                    export KUBECONFIG=${KUBECONFIG_CREDENTIALS}
                     
-                    echo "Verifying kubectl connectivity..."
-                    kubectl cluster-info
-                    kubectl get nodes
-                    
-                    echo "Applying Kubernetes manifests..."
-                    kubectl apply -f k8s/service.yaml -n ${KUBE_NAMESPACE}
-                    kubectl apply -f k8s/deployment.yaml -n ${KUBE_NAMESPACE}
-                    
-                    echo "Updating deployment image to ${IMAGE}:${TAG}..."
-                    kubectl set image deployment/devops-app \
-                        devops-app=${IMAGE}:${TAG} \
-                        -n ${KUBE_NAMESPACE}
-                    
-                    echo "Applying optional ingress configuration..."
-                    kubectl apply -f k8s/ingress.yaml -n ${KUBE_NAMESPACE} || true
-                    
-                    echo "Waiting for deployment rollout..."
-                    kubectl rollout status deployment/devops-app -n ${KUBE_NAMESPACE} --timeout=5m
-                    
-                    echo "Deployment completed successfully"
-                    echo "Getting pod information..."
-                    kubectl get pods -n ${KUBE_NAMESPACE} -l app=devops-app
-                '''
-                
-                script {
-                    echo "Kubernetes deployment completed"
+                    // Check if KUBE_CONFIG credential exists
+                    def kubeConfigExists = false
+                    try {
+                        withCredentials([file(credentialsId: 'KUBE_CONFIG', variable: 'KUBECONFIG_FILE')]) {
+                            kubeConfigExists = true
+                            echo "KUBE_CONFIG credential found - proceeding with deployment"
+                            
+                            sh '''
+                                echo "Setting up kubeconfig..."
+                                export KUBECONFIG=${KUBECONFIG_FILE}
+                                
+                                echo "Verifying kubectl connectivity..."
+                                kubectl cluster-info
+                                kubectl get nodes
+                                
+                                echo "Applying Kubernetes manifests..."
+                                kubectl apply -f k8s/service.yaml -n ${KUBE_NAMESPACE}
+                                kubectl apply -f k8s/deployment.yaml -n ${KUBE_NAMESPACE}
+                                
+                                echo "Updating deployment image to ${IMAGE}:${TAG}..."
+                                kubectl set image deployment/devops-app \
+                                    devops-app=${IMAGE}:${TAG} \
+                                    -n ${KUBE_NAMESPACE}
+                                
+                                echo "Applying optional ingress configuration..."
+                                kubectl apply -f k8s/ingress.yaml -n ${KUBE_NAMESPACE} || true
+                                
+                                echo "Waiting for deployment rollout..."
+                                kubectl rollout status deployment/devops-app -n ${KUBE_NAMESPACE} --timeout=5m
+                                
+                                echo "Deployment completed successfully"
+                                echo "Getting pod information..."
+                                kubectl get pods -n ${KUBE_NAMESPACE} -l app=devops-app
+                            '''
+                        }
+                    } catch (Exception e) {
+                        echo "⚠️  KUBE_CONFIG credential not found - skipping Kubernetes deployment"
+                        echo "To enable K8s deployment, create a 'KUBE_CONFIG' secret file credential in Jenkins"
+                        echo "Continuing with pipeline..."
+                    }
                 }
             }
         }
