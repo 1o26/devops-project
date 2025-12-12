@@ -100,15 +100,16 @@ pipeline {
                 }
                 
                 // Run flake8 linter on Python code
-                sh '''
-                    echo "Installing flake8..."
+                bat '''
+                    @echo off
+                    echo Installing flake8...
                     pip install flake8 -q
                     
-                    echo "Running flake8 on app/app.py..."
-                    flake8 app/app.py --count --select=E9,F63,F7,F82 --show-source --statistics || true
+                    echo Running flake8 on app/app.py...
+                    flake8 app/app.py --count --select=E9,F63,F7,F82 --show-source --statistics
                     
-                    echo "Full flake8 report:"
-                    flake8 app/app.py --statistics || true
+                    echo Full flake8 report:
+                    flake8 app/app.py --statistics
                 '''
                 
                 script {
@@ -130,11 +131,12 @@ pipeline {
                 }
                 
                 // Run tests with coverage
-                sh '''
-                    echo "Installing test dependencies..."
+                bat '''
+                    @echo off
+                    echo Installing test dependencies...
                     pip install -r app/requirements.txt -q
                     
-                    echo "Running pytest tests..."
+                    echo Running pytest tests...
                     pytest tests/test_app.py -v --tb=short --junit-xml=test-results.xml --cov=app --cov-report=html --cov-report=term
                 '''
                 
@@ -165,18 +167,13 @@ pipeline {
                 }
                 
                 // Build Docker image
-                sh '''
-                    echo "Building Docker image with tag ${TAG}..."
-                    docker build \
-                        -t ${IMAGE}:${TAG} \
-                        -t ${IMAGE}:latest \
-                        --label "BUILD_NUMBER=${BUILD_NUMBER}" \
-                        --label "GIT_COMMIT=${GIT_COMMIT_SHORT}" \
-                        --label "BUILD_TIMESTAMP=${BUILD_TIMESTAMP}" \
-                        -f docker/Dockerfile .
+                bat '''
+                    @echo off
+                    echo Building Docker image with tag %TAG%...
+                    docker build -t %IMAGE%:%TAG% -t %IMAGE%:latest --label "BUILD_NUMBER=%BUILD_NUMBER%" --label "GIT_COMMIT=%GIT_COMMIT_SHORT%" --label "BUILD_TIMESTAMP=%BUILD_TIMESTAMP%" -f docker/Dockerfile .
                     
-                    echo "Docker image built successfully"
-                    docker images | grep "${IMAGE}"
+                    echo Docker image built successfully
+                    docker images | findstr "%IMAGE%"
                 '''
                 
                 script {
@@ -198,17 +195,18 @@ pipeline {
                 }
                 
                 // Login to Docker Hub and push image
-                sh '''
-                    echo "Authenticating with Docker Hub..."
-                    echo ${DOCKER_CREDENTIALS_PSW} | docker login -u ${DOCKER_CREDENTIALS_USR} --password-stdin
+                bat '''
+                    @echo off
+                    echo Authenticating with Docker Hub...
+                    docker login -u %DOCKER_CREDENTIALS_USR% -p %DOCKER_CREDENTIALS_PSW%
                     
-                    echo "Pushing image: ${IMAGE}:${TAG}"
-                    docker push ${IMAGE}:${TAG}
+                    echo Pushing image: %IMAGE%:%TAG%
+                    docker push %IMAGE%:%TAG%
                     
-                    echo "Pushing latest tag..."
-                    docker push ${IMAGE}:latest
+                    echo Pushing latest tag...
+                    docker push %IMAGE%:latest
                     
-                    echo "Image pushed successfully"
+                    echo Image pushed successfully
                     docker logout
                 '''
                 
