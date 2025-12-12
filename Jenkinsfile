@@ -146,11 +146,6 @@ pipeline {
                 
                 // Publish test results
                 junit 'test-results.xml'
-                publishHTML([
-                    reportDir: 'htmlcov',
-                    reportFiles: 'index.html',
-                    reportName: 'Coverage Report'
-                ])
             }
         }
         
