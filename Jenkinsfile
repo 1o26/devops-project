@@ -270,88 +270,22 @@ pipeline {
     /**
      * POST ACTIONS
      * Executed after all stages complete
-     * Handles notifications and cleanup
      */
     post {
-        always {
-            cleanWs()
-        }
-        
         success {
-            script {
-                echo "========== Pipeline Success =========="
-                echo "Build #${BUILD_NUMBER} completed successfully"
-                echo "Docker Image: ${IMAGE}:${TAG}"
-                
-                // Optional: Send Slack notification only if webhook is configured
-                withEnv(['SLACK_WEBHOOK_URL=' + (env.SLACK_WEBHOOK_URL ?: '')]) {
-                    script {
-                        if (env.SLACK_WEBHOOK_URL) {
-                            sh '''
-                                curl -X POST ${SLACK_WEBHOOK_URL} \
-                                    -H 'Content-Type: application/json' \
-                                    -d '{
-                                        "channel": "#devops",
-                                        "username": "Jenkins Bot",
-                                        "icon_emoji": ":jenkins:",
-                                        "attachments": [{
-                                            "color": "good",
-                                            "title": "✅ DevOps Pipeline Success",
-                                            "text": "Build and deployment completed successfully",
-                                            "fields": [
-                                                {"title": "Build Number", "value": "'${BUILD_NUMBER}'", "short": true},
-                                                {"title": "Image Tag", "value": "'${IMAGE}:${TAG}'", "short": true},
-                                                {"title": "Environment", "value": "production", "short": true},
-                                                {"title": "Commit", "value": "'${GIT_COMMIT_SHORT}'", "short": true}
-                                            ]
-                                        }]
-                                    }' || true
-                            '''
-                        }
-                    }
-                }
-            }
+            echo "========== BUILD SUCCESS =========="
+            echo "Build #${BUILD_NUMBER} completed successfully"
+            echo "Docker Image: ${IMAGE}:${TAG}"
         }
         
         failure {
-            script {
-                echo "========== Pipeline Failed =========="
-                echo "Build #${BUILD_NUMBER} failed. Check logs above for details."
-                
-                // Optional: Send Slack failure notification
-                withEnv(['SLACK_WEBHOOK_URL=' + (env.SLACK_WEBHOOK_URL ?: '')]) {
-                    script {
-                        if (env.SLACK_WEBHOOK_URL) {
-                            sh '''
-                                curl -X POST ${SLACK_WEBHOOK_URL} \
-                                    -H 'Content-Type: application/json' \
-                                    -d '{
-                                        "channel": "#devops",
-                                        "username": "Jenkins Bot",
-                                        "icon_emoji": ":jenkins:",
-                                        "attachments": [{
-                                            "color": "danger",
-                                            "title": "❌ DevOps Pipeline Failed",
-                                            "text": "Build failed. Check Jenkins logs for details.",
-                                            "fields": [
-                                                {"title": "Build Number", "value": "'${BUILD_NUMBER}'", "short": true},
-                                                {"title": "Status", "value": "FAILED", "short": true},
-                                                {"title": "Commit", "value": "'${GIT_COMMIT_SHORT}'", "short": true}
-                                            ]
-                                        }]
-                                    }' || true
-                            '''
-                        }
-                    }
-                }
-            }
+            echo "========== BUILD FAILED =========="
+            echo "Build #${BUILD_NUMBER} failed - check logs above for details"
         }
         
         unstable {
-            script {
-                echo "========== Pipeline Unstable =========="
-                echo "Build #${BUILD_NUMBER} completed with warnings."
-            }
+            echo "========== BUILD UNSTABLE =========="
+            echo "Build #${BUILD_NUMBER} completed with warnings"
         }
     }
 }
