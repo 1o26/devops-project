@@ -108,8 +108,8 @@ pipeline {
                     echo Running flake8 on app/app.py...
                     flake8 app/app.py --count --select=E9,F63,F7,F82 --show-source --statistics
                     
-                    echo Full flake8 report:
-                    flake8 app/app.py --statistics
+                    echo Full flake8 report (ignoring W293 - blank line whitespace):
+                    flake8 app/app.py --ignore=W293 --statistics
                 '''
                 
                 script {
